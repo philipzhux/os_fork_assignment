@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     pid_t* pids = (pid_t*)(malloc(argc*sizeof(pid_t)));
     char* path = argv[1];
     //signal(SIGCHLD,sigchld_handler);
-    printf("I'm the parent process, my pid = %d\n",(int)(getpid()));
+    printf("I'm the root process, my pid = %d\n",(int)(getpid()));
     while(cnt<argc-1) {
         pids[cnt] = getpid();
         //printf("%d\n",cnt);
