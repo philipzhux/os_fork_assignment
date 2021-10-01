@@ -1,0 +1,1 @@
+cmd_/home/philip/dev/csc3150/proj1/source/program2/program2.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/philip/dev/csc3150/proj1/source/program2/program2.ko /home/philip/dev/csc3150/proj1/source/program2/program2.o /home/philip/dev/csc3150/proj1/source/program2/program2.mod.o ;  true

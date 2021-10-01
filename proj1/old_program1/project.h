@@ -5,37 +5,8 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
-/** prototypes **/
-
-// int sigemptyset(sigset_t *set);
-
-// int sigfillset(sigset_t *set);
-
-// int sigaddset(sigset_t *set, int signum);
-
-// int sigdelset(sigset_t *set, int signum);
-
-// int sigismember(const sigset_t *set, int signum);
-
-typedef void (*sighandler_t)(int);
-
-sighandler_t signal(int signum, sighandler_t handler);
-
-char *strsignal(int sig);
-
-const char *sigdescr_np(int sig);
-
-const char *sigabbrev_np(int sig);
 
 extern const char *const sys_siglist[];
-
-pid_t wait(int *status);
-pid_t waitpid(pid_t pid, int *status, int options);
-
-pid_t fork(void);
-pid_t getpid(void);
-
-pid_t getppid(void);
 
 
 void sigchld_handler(int sig);
