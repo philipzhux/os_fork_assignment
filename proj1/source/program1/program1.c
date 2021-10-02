@@ -12,12 +12,12 @@ void exited(int sig, pid_t parent, pid_t child);
 void signaled(int sig, pid_t parent, pid_t child);
 void stopped(int sig, pid_t parent, pid_t child);
 
-const char * sigprompt[]={"INVALID","hung up","interupted","quitted","stopped by ill-formed instruction",
+const char * const sigprompt[]={"INVALID","hung up","interupted","quitted","stopped by ill-formed instruction",
 "trapped","aborted","exited by bus error","exited by computation error","killed",
 "exited by user defined signal","exited by segmentation fault","exited by user defined signal",
 "trying to access a broken pipe","exited by an alarm","terminated","exited as coprocessor experiences a stack fault",
 "receiving a SIGCHLD signal","receiving a coninue signal"};
-const char * signame[]={"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP",
+const char * const signame[]={"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP",
  "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE",
   "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN",
    "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL",

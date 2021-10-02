@@ -41,7 +41,7 @@ MODULE_LICENSE("GPL");
 "exited by user defined signal","exited by segmentation fault","exited by user defined signal",
 "trying to access a broken pipe","exited by an alarm","terminated","exited as coprocessor experiences a stack fault",
 "receiving a SIGCHLD signal","receiving a coninue signal"};
-	const char * signame[]={"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL",
+const char * const signame[]={"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL",
 	 "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV",
 	  "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT",
 	   "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ",
@@ -84,7 +84,7 @@ void my_wait(pid_t pid,int* status) {
 	pid_objptr = find_get_pid(pid);
 	wo.wo_type = type;
 	wo.wo_pid = pid_objptr;
-	wo.wo_flags = WEXITED;
+	wo.wo_flags = WEXITED|WUNTRACED;
 	wo.wo_info = NULL;
 	wo.wo_stat = (int __user *)status;
 	wo.wo_rusage = NULL;
