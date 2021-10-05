@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -47,7 +48,8 @@ int main(int argc, char** argv) {
         printf("Syntax Error. Usage: %s EXECUABLE1 [EXECUANLE2] [...] \n",argv[0]);
         return -1;
     }
-    pid_t* pids = (pid_t*)(malloc(argc*sizeof(pid_t)));
+    pid_t* pids = (pid_t*)(mmap(NULL, argc*sizeof(pid_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0));
+    pid_t* statuses = (pid_t*)(mmap(NULL, argc*sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0));
     char* path = argv[1];
     //signal(SIGCHLD,sigchld_handler);
     printf("I'm the root process, my pid = %d\n",(int)(getpid()));
@@ -65,9 +67,6 @@ int main(int argc, char** argv) {
     if(cnt==argc-1) {
         pids[cnt] = getpid();
         printf("the process tree: ");
-        size_t i;
-        for(i=0;i<argc-1;i++) printf("%d->",(int)(pids[i]));
-        printf("%d\n",(int)(pids[i]));
         char *argv_new[] = {argv[cnt], 0};
         char *envp_new[] = {0};
         execve(argv_new[0],&argv_new[0],&envp_new[0]);
@@ -77,9 +76,7 @@ int main(int argc, char** argv) {
         abort();
     }
     waitpid(pid,&status,WUNTRACED);
-    if(WIFSIGNALED(status)) signaled(WTERMSIG(status),getpid(),pid);
-    if(WIFSTOPPED(status)) stopped(WSTOPSIG(status),getpid(),pid);
-    if(WIFEXITED(status))  exited(WEXITSTATUS(status),getpid(),pid);
+    statuses[cnt] = status;
     if(cnt!=0) {
         char *argv_new[] = {argv[cnt], 0};
         char *envp_new[] = {0};
@@ -89,7 +86,14 @@ int main(int argc, char** argv) {
         printf("\n===================================================\n\n");
         abort();
     }
-    printf("\n%s process (pid=%d) executes normally\n",argv[0],(int)(getpid()));
+    for(size_t i=0;i<argc-1;i++) printf("%d->",(int)(pids[i]));
+    printf("%d\n",(int)(pids[i]));
+    for(size_t i=0;i<argc;i++) {
+        if(WIFSIGNALED(status)) signaled(WTERMSIG(status),pids[i],pids[i-1]);
+        else if(WIFSTOPPED(status)) stopped(WSTOPSIG(status),pids[i],pids[i-1]);
+        else if(WIFEXITED(status))  exited(WEXITSTATUS(status),pids[i],pids[i-1]);
+    }
+    printf("\n%s process (%d) executes normally\n",argv[0],(int)(getpid()));
 }
 
 

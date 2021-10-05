@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -47,10 +48,11 @@ int main(int argc, char** argv) {
         printf("Syntax Error. Usage: %s EXECUABLE1 [EXECUANLE2] [...] \n",argv[0]);
         return -1;
     }
-    pid_t* pids = (pid_t*)(malloc(argc*sizeof(pid_t)));
+    pid_t* pids = (pid_t*)(mmap(NULL, argc*sizeof(pid_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0));
+    int* statuses = (int*)(mmap(NULL, argc*sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0));
     char* path = argv[1];
     //signal(SIGCHLD,sigchld_handler);
-    printf("I'm the root process, my pid = %d\n",(int)(getpid()));
+    //printf("I'm the root process, my pid = %d\n",(int)(getpid()));
     while(cnt<argc-1) {
         pids[cnt] = getpid();
         //printf("%d\n",cnt);
@@ -64,10 +66,6 @@ int main(int argc, char** argv) {
     //printf("%d\n",cnt);
     if(cnt==argc-1) {
         pids[cnt] = getpid();
-        printf("the process tree: ");
-        size_t i;
-        for(i=0;i<argc-1;i++) printf("%d->",(int)(pids[i]));
-        printf("%d\n",(int)(pids[i]));
         char *argv_new[] = {argv[cnt], 0};
         char *envp_new[] = {0};
         execve(argv_new[0],&argv_new[0],&envp_new[0]);
@@ -77,9 +75,7 @@ int main(int argc, char** argv) {
         abort();
     }
     waitpid(pid,&status,WUNTRACED);
-    if(WIFSIGNALED(status)) signaled(WTERMSIG(status),getpid(),pid);
-    if(WIFSTOPPED(status)) stopped(WSTOPSIG(status),getpid(),pid);
-    if(WIFEXITED(status))  exited(WEXITSTATUS(status),getpid(),pid);
+    statuses[cnt] = status;
     if(cnt!=0) {
         char *argv_new[] = {argv[cnt], 0};
         char *envp_new[] = {0};
@@ -89,7 +85,16 @@ int main(int argc, char** argv) {
         printf("\n===================================================\n\n");
         abort();
     }
-    printf("\n%s process (pid=%d) executes normally\n",argv[0],(int)(getpid()));
+    int i;
+    printf("\nProcess tree: ");
+    for(i=0;i<argc-1;i++) printf("%d->",(int)(pids[i]));
+    printf("%d\n",(int)(pids[i]));
+    for(i=argc-2;i>=0;i--) {
+        if(WIFSIGNALED(statuses[i])) signaled(WTERMSIG(statuses[i]),pids[i],pids[i+1]);
+        else if(WIFSTOPPED(statuses[i])) stopped(WSTOPSIG(statuses[i]),pids[i],pids[i+1]);
+        else if(WIFEXITED(statuses[i]))  exited(WEXITSTATUS(statuses[i]),pids[i],pids[i+1]);
+    }
+    printf("\n%s process (%d) executes normally\n",argv[0],(int)(getpid()));
 }
 
 
@@ -99,14 +104,14 @@ void sigchld_handler(int sig) {
 }
 
 void exited(int code, pid_t parent, pid_t child) {
-    printf("The child process(pid=%d) of parent process (pid=%d) terminated normally with exit code %d\n",
+    printf("Child process %d of parent process %d terminated normally with exit code %d\n",
     (int)child,(int)parent,code);
 }
 void signaled(int sig, pid_t parent, pid_t child){
-    printf("The child process(pid=%d) of parent process (pid=%d) is terminated by signal %d (%s)\n",
+    printf("Child process %d of parent process %d is terminated by signal %d (%s)\n",
     (int)(child),(int)(parent),sig,strsignal(sig));
 }
 void stopped(int sig, pid_t parent, pid_t child){
-    printf("The child process(pid=%d) of parent process (pid=%d) is terminated by signal %d (%s)\n",
+    printf("Child process %d of parent process %d is terminated by signal %d (%s)\n",
     (int)(child),(int)(parent),sig,strsignal(sig));
 }
