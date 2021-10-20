@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     if(cnt==argc-1) {
         pids[cnt] = getpid();
         char *argv_new[] = {argv[cnt], 0};
-        char *envp_new[] = {0};
+        char *envp_new[] = {"HOME=/","PATH=/sbin:/usr/sbin:/bin:/usr/bin",0};
         execve(argv_new[0],&argv_new[0],&envp_new[0]);
         printf("\n====================== ERROR ======================\n");
         printf("\nCorrupted execuable [%s], abort myself (pid=%d)\n",argv[cnt],(int)(getpid()));
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     statuses[cnt] = status;
     if(cnt!=0) {
         char *argv_new[] = {argv[cnt], 0};
-        char *envp_new[] = {0};
+        char *envp_new[] = {"HOME=/","PATH=/sbin:/usr/sbin:/bin:/usr/bin",0};
         execve(argv_new[0],&argv_new[0],&envp_new[0]);
         printf("\n====================== ERROR ======================\n");
         printf("\nCorrupted execuable [%s], abort myself (pid=%d)\n",argv[cnt],(int)(getpid()));
@@ -95,6 +95,8 @@ int main(int argc, char** argv) {
         else if(WIFEXITED(statuses[i]))  exited(WEXITSTATUS(statuses[i]),pids[i],pids[i+1]);
     }
     printf("\n%s process (%d) executes normally\n",argv[0],(int)(getpid()));
+    munmap(pids,argc*sizeof(pid_t));
+    munmap(statuses,argc*sizeof(pid_t));
 }
 
 

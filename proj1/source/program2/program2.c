@@ -24,7 +24,7 @@ MODULE_LICENSE("GPL");
 #define __WSTOPSIG(status) __WEXITSTATUS(status)
 
 /* Nonzero if STATUS indicates normal termination.  */
-#define __WIFEXITED(status) (__WTERMSIG(status) == 0
+#define __WIFEXITED(status) (__WTERMSIG(status) == 0)
 
 /* Nonzero if STATUS indicates termination by a signal.  */
 #define __WIFSIGNALED(status) \
@@ -66,12 +66,11 @@ void sigchld_handler(int sig) {
 }
 
 int my_exec(void){
-	const char* path = "/home/philip/dev/csc3150/proj1/source/program2/test";
+	const char* path = "/opt/test";
 	struct filename *path_file;
 	const char __user *const __user argv[] = {path,NULL};
-	const char __user *const __user envp[] = {NULL};
-	printk("[program2] : The child process has pid = %d\n",(int)kernel_pid);
-	printk("[program2] : Child process start to execute the program\n");
+	const char __user *const __user envp[] = {"HOME=/","PATH=/sbin:/usr/sbin:/bin:/usr/bin",NULL};
+	printk("[program2] : child process\n");
 	path_file = getname(path);
 	return do_execve(path_file,argv,envp);
 }
@@ -89,13 +88,15 @@ void my_wait(pid_t pid,int* status) {
 	wo.wo_stat = (int __user *)status;
 	wo.wo_rusage = NULL;
 	do_wait(&wo);
+	//you are free to prink blablabla here tho I didn't
+	put_pid(pid_objptr);
 	return;
 }
 int my_fork(void *argc){
 	//set default sigaction for current process
 	int i,status,sig; long pid;
 	struct k_sigaction *k_action = &current->sighand->action[0];
-	struct k_sigaction *chld_action;
+	//struct k_sigaction *chld_action;
 	printk("[program2] : module_init kthread start\n");
 	for(i=0;i<_NSIG;i++){
 		if(i==SIGCHLD) k_action->sa.sa_handler = &sigchld_handler;
@@ -105,26 +106,25 @@ int my_fork(void *argc){
 		sigemptyset(&k_action->sa.sa_mask);
 		k_action++;
 	}
-	chld_action = (struct k_sigaction *)kmalloc(sizeof(struct k_sigaction),GFP_KERNEL);
-	chld_action->sa.sa_handler = &sigchld_handler;
-	chld_action->sa.sa_flags = 0;
-	chld_action->sa.sa_restorer = NULL;
-	sigemptyset(&chld_action->sa.sa_mask);
-	do_sigaction(SIGCHLD,chld_action,NULL);
-	printk("[program2] : This is the parent process, pid = %d\n",(int)kernel_pid);
+	// chld_action = (struct k_sigaction *)kmalloc(sizeof(struct k_sigaction),GFP_KERNEL);
+	// chld_action->sa.sa_handler = &sigchld_handler;
+	// chld_action->sa.sa_flags = 0;
+	// chld_action->sa.sa_restorer = NULL;
+	// sigemptyset(&chld_action->sa.sa_mask);
+	// do_sigaction(SIGCHLD,chld_action,NULL);
 	if((pid=DFORK(&my_exec))){ 
-		/* parent process */
+		printk("[program2] : The child process has pid = %d\n",(int)pid);
+		printk("[program2] : This is the parent process, pid = %d\n",(int)kernel_pid);
 	}
 	else {
 		/* execute a test program in child process */
 		my_exec();
 	}
-	
 	/* wait until child process terminates */
 	my_wait((pid_t)pid,&status);
 	if(__WIFSIGNALED(status)) {
 		sig = __WTERMSIG(status);
-		printk("[program2] : child process get %s signal\n",signame[sig]);
+		printk("[program2] : get %s signal\n",signame[sig]);
 		if(sig<=18) printk("[program2] : child process is %s.\n",sigprompt[sig]);
 		else printk("[program2] : the return signal is %d\n",sig);
 		printk("[program2] : the return signal is %d\n",sig);

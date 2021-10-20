@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         printf("I'm the child process, my pid = %d\n",(int)(getpid()));
         printf("Child process start to execute the program\n");
         char *argv_new[] = {path, 0};
-        char *envp_new[] = {0};
+        char *envp_new[] = {"HOME=/","PATH=/sbin:/usr/sbin:/bin:/usr/bin",0};
         execve(argv_new[0],&argv_new[0],&envp_new[0]);
         printf("\n====================== ERROR ======================\n");
         printf("\nCorrupted execuable [%s], abort myself (pid=%d)\n",path,(int)(getpid()));
